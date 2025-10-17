@@ -21,7 +21,7 @@ Navigate to your desired location ($HOME/.config), then run:
 
 ```bash
 git clone https://github.com/boltzkreig/DMRC-CLI.git
-cd DMRC
+cd DMRC-CLI
 python3 entry.py bootstrap
 ```
 
