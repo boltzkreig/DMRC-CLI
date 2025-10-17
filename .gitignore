@@ -1,0 +1,8 @@
+*.pyc
+src/__pycache__/
+
+.venv/
+
+*.egg-info/
+
+aux/
