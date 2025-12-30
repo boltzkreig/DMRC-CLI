@@ -10,6 +10,7 @@ A convenient CLI frontend for the DMRC website — with some much-needed addenda
 * Query journeys with *minimum interchanges* (defaulting to *least distance*, as on the official website).
 * Display station details and available amenities.
 * Fetch first and last train timings for your route.
+* Remembers the most recent station choices; plus ability to switch the journey direction.
 * **Extra:** The official website sometimes doesn’t recommend your desired route — use the `via` option to ensure your intended journey is estimated.
 * **Extra:** Find the 5 closest stations (with bearing) using [Termux-API](https://github.com/termux/termux-api).
 
@@ -62,6 +63,12 @@ Some examples:
 
    ```bash
    DMRC -t
+   ```
+
+6. Do the Last request again
+
+   ```bash
+   DMRC -r
    ```
 
 ---
