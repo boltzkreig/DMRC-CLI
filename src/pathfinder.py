@@ -89,22 +89,8 @@ def closest_station():
         ):
             print(f"\t{i}: {key} ({round(_dis,3)} km) towards {round(_dir)} o'clock")
 
-
-def get_first_and_last_trains(FROM, DEST, ALGO):
-    FROM = (
-        poll_station("--prompt='FROM: '")
-        if FROM is None
-        else poll_station(f'--filter="{FROM}"')
-    )
-    DEST = (
-        poll_station("--prompt='DEST: '")
-        if DEST is None
-        else poll_station(f'--filter="{DEST}"')
-    )
-    ALGO = "minimum-interchange" if ALGO == "MI" else "least-distance"
-    res = request_handler(
-        f"{ENDPOINT}/first_and_last_train_with_filter/{FROM}/{DEST}/{ALGO}"
-    )
+def get_first_and_last_trains(FROM, DEST, ALGO, RETRY):
+    FROM, VIA, DEST, ALGO = setup_vars(FROM, False, DEST, ALGO, RETRY)
     print(tc("\rFIRST TRAIN:", styles=["bold"]))
     for section in res["first_train"]["first_train_route_detail"]:
         print(
@@ -121,9 +107,12 @@ def get_first_and_last_trains(FROM, DEST, ALGO):
         print(
             f"\t{'('+section['start_time']+')':35} \u2b95  {'('+section['end_time']+')'}"
         )
+    station_cache = [ FROM, False, DEST ]
+    with open(CACHE_FILE, "w") as file:
+        json.dump(station_cache, file, indent=0)
 
 
-def plan_journey(FROM, VIA, DEST, ALGO):
+def plan_journey(FROM, VIA, DEST, ALGO, RETRY):
     def path_manager(point_a, point_b, time, ALGO):
         res = request_handler(
             f'{ENDPOINT}/station_route/{point_a}/{point_b}/{ALGO}/{time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}'
@@ -153,23 +142,7 @@ def plan_journey(FROM, VIA, DEST, ALGO):
         time += timedelta(hours=diff.hour, minutes=diff.minute, seconds=diff.second)
         return time
 
-    FROM = (
-        poll_station("--prompt='FROM: '")
-        if FROM is None
-        else poll_station(f'--filter="{FROM}"')
-    )
-    if VIA is not False:
-        VIA = (
-            poll_station("--prompt='VIA: '")
-            if VIA is None
-            else poll_station(f'--filter="{VIA}"')
-        )
-    DEST = (
-        poll_station("--prompt='DEST: '")
-        if DEST is None
-        else poll_station(f'--filter="{DEST}"')
-    )
-    ALGO = "minimum-interchange" if ALGO == "MI" else "least-distance"
+    FROM, VIA, DEST, ALGO = setup_vars(FROM, VIA, DEST, ALGO, RETRY)
     time = datetime.now()
     print(
         f'\t{FROM} \u2B95 {VIA + " \u2B95" if VIA else ""} {DEST}\n\t{ALGO} @ {time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}\n'
@@ -184,3 +157,6 @@ def plan_journey(FROM, VIA, DEST, ALGO):
     sheet["timeCollection"].append("==> " + str(time.strftime("%H:%M:%S")))
     print("\t󰦖 :", *sheet["timeCollection"])
     print("\n\t" + "\n\r\t".join(sheet["body"]))
+    station_cache = [ FROM, VIA, DEST ]
+    with open(CACHE_FILE, "w") as file:
+        json.dump(station_cache, file, indent=0)

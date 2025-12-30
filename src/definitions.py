@@ -20,6 +20,7 @@ Aux_Dir = Path(__file__).parent.parent / "aux"
 Aux_Dir.mkdir(exist_ok=True)
 ENDPOINT = "https://backend.delhimetrorail.com/api/v2/en"
 LINE_FILE = Aux_Dir / "line_index.json"
+CACHE_FILE = Aux_Dir / "stations_cache.json"
 STATION_FILE = Aux_Dir / "stations_index.json"
 PROXIMITY_FILE = Aux_Dir / "station_location.json"
 # line_list # facility_category # service_information # station_by_keyword/all/### # station_by_line/LN#
@@ -128,6 +129,7 @@ def read_json(name):
             tc("[ERROR] ", color="#ff0000") + str(e) + " Trying to Generate Cache Files"
         )
         generate_json()
+        Path(CACHE_FILE).touch(exist_ok=True)
     finally:
         with open(name, "r") as file:
             return json.load(file)
@@ -151,6 +153,45 @@ def symbolise(raw_token):
     token = raw_token.split('&')[0].strip(' ').lower()
     if token.endswith('s'): token = token[:-1]
     return Alias.get(token, raw_token)
+
+def setup_vars(FROM, VIA, DEST, ALGO, RETRY):
+    try:
+        if RETRY:
+            with open(CACHE_FILE, "r") as file:
+                _FROM, _VIA, _DEST = json.load(file)
+        if RETRY == 2:
+            _FROM, _DEST = _DEST, _FROM
+    except:
+        _FROM, _VIA, _DEST = [None, None, None]
+
+    finally:
+        if FROM is None:
+            if RETRY:
+                FROM = _FROM
+            else:
+                FROM = poll_station("--prompt='FROM: '")
+        else:
+            FROM = poll_station(f'--filter="{FROM}"')
+
+        if VIA is not False:
+            if VIA is None:
+                if RETRY:
+                    VIA = _VIA
+                else:
+                    VIA = poll_station("--prompt='VIA: '")
+            else:
+                VIA = poll_station(f'--filter="{VIA}"')
+
+        if DEST is None:
+            if RETRY:
+                DEST = _DEST
+            else:
+                DEST = poll_station("--prompt='DEST: '")
+        else:
+            DEST = poll_station(f'--filter="{DEST}"')
+
+        ALGO = "minimum-interchange" if ALGO == "MI" else "least-distance"
+        return [ FROM, VIA, DEST, ALGO ]
 
 
 stations = read_json(STATION_FILE)

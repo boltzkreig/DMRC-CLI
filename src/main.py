@@ -54,6 +54,14 @@ if __name__ == "__main__":
         help="queries journey for Minimum-Interchanges (default: least distance)",
     )
     parser.add_argument(
+        "-r",
+        "--retry",
+        dest="RETRY",
+        action="count",
+        default=0,
+        help="RETRY command with previous stations overwritably (use twice to reverse journey)",
+    )
+    parser.add_argument(
         "-t",
         "--time",
         dest="jobs",
@@ -95,9 +103,10 @@ if __name__ == "__main__":
             case "UPDT":
                 generate_json()
             case "FTLT":
-                get_first_and_last_trains(args.FROM, args.DEST, args.algo)
+                get_first_and_last_trains(args.FROM, args.DEST, args.algo, args.RETRY)
             case _:
-                plan_journey(args.FROM, args.VIA, args.DEST, args.algo)
+                plan_journey(args.FROM, args.VIA, args.DEST, args.algo, args.RETRY)
+
     except KeyboardInterrupt:
         print("\r" + tc("[INFO] ", color="#ffff00") + " Interrupted")
     finally:
