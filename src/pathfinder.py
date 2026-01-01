@@ -89,8 +89,12 @@ def closest_station():
         ):
             print(f"\t{i}: {key} ({round(_dis,3)} km) towards {round(_dir)} o'clock")
 
+
 def get_first_and_last_trains(FROM, DEST, ALGO, RETRY):
     FROM, VIA, DEST, ALGO = setup_vars(FROM, False, DEST, ALGO, RETRY)
+    res = request_handler(
+        f"{ENDPOINT}/first_and_last_train_with_filter/{FROM}/{DEST}/{ALGO}"
+    )
     print(tc("\rFIRST TRAIN:", styles=["bold"]))
     for section in res["first_train"]["first_train_route_detail"]:
         print(
@@ -107,9 +111,6 @@ def get_first_and_last_trains(FROM, DEST, ALGO, RETRY):
         print(
             f"\t{'('+section['start_time']+')':35} \u2b95  {'('+section['end_time']+')'}"
         )
-    station_cache = [ FROM, False, DEST ]
-    with open(CACHE_FILE, "w") as file:
-        json.dump(station_cache, file, indent=0)
 
 
 def plan_journey(FROM, VIA, DEST, ALGO, RETRY):
@@ -157,6 +158,3 @@ def plan_journey(FROM, VIA, DEST, ALGO, RETRY):
     sheet["timeCollection"].append("==> " + str(time.strftime("%H:%M:%S")))
     print("\t󰦖 :", *sheet["timeCollection"])
     print("\n\t" + "\n\r\t".join(sheet["body"]))
-    station_cache = [ FROM, VIA, DEST ]
-    with open(CACHE_FILE, "w") as file:
-        json.dump(station_cache, file, indent=0)

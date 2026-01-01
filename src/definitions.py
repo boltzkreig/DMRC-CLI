@@ -23,8 +23,6 @@ LINE_FILE = Aux_Dir / "line_index.json"
 CACHE_FILE = Aux_Dir / "stations_cache.json"
 STATION_FILE = Aux_Dir / "stations_index.json"
 PROXIMITY_FILE = Aux_Dir / "station_location.json"
-# line_list # facility_category # service_information # station_by_keyword/all/### # station_by_line/LN#
-# new_fare_with_route/HDNR/NDI/least-distance/
 LAT_DIS = 111.195
 
 session.headers.update(
@@ -130,13 +128,13 @@ def read_json(name):
         )
         generate_json()
         Path(CACHE_FILE).touch(exist_ok=True)
-    finally:
-        with open(name, "r") as file:
-            return json.load(file)
-        if _hash == file_digest(open(name, "rb"), "sha3_512").hexdigest():
-            print("Found  Nothing New in", name)
-        else:
-            print("Found Something New in", name)
+
+    with open(name, "r") as file:
+        return json.load(file)
+    if _hash == file_digest(open(name, "rb"), "sha3_512").hexdigest():
+        print("Found  Nothing New in", name)
+    else:
+        print("Found Something New in", name)
 
 
 def poll_station(extra):
@@ -153,6 +151,7 @@ def symbolise(raw_token):
     token = raw_token.split('&')[0].strip(' ').lower()
     if token.endswith('s'): token = token[:-1]
     return Alias.get(token, raw_token)
+
 
 def setup_vars(FROM, VIA, DEST, ALGO, RETRY):
     try:
@@ -191,7 +190,12 @@ def setup_vars(FROM, VIA, DEST, ALGO, RETRY):
             DEST = poll_station(f'--filter="{DEST}"')
 
         ALGO = "minimum-interchange" if ALGO == "MI" else "least-distance"
-        return [ FROM, VIA, DEST, ALGO ]
+
+        station_cache = [ FROM, VIA, DEST ]
+        with open(CACHE_FILE, "w") as file:
+            json.dump(station_cache, file, indent=0)
+
+    return [ FROM, VIA, DEST, ALGO ]
 
 
 stations = read_json(STATION_FILE)
